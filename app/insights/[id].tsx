@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import {
+  View, Text, ScrollView, StyleSheet,
+  ActivityIndicator, TouchableOpacity
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 const API_URL = 'https://cricai-backend-production.up.railway.app';
@@ -9,6 +12,7 @@ export default function InsightsScreen() {
   const router = useRouter();
   const [insight, setInsight] = useState<any>(null);
   const [report, setReport] = useState<any>(null);
+  const [prematch, setPrematch] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,10 +21,12 @@ export default function InsightsScreen() {
     Promise.all([
       fetch(`${API_URL}/insights/${id}`).then((r) => r.json()),
       fetch(`${API_URL}/match-report/${id}`).then((r) => r.json()),
+      fetch(`${API_URL}/pre-match/${id}`).then((r) => r.json()),
     ])
-      .then(([insightData, reportData]) => {
+      .then(([insightData, reportData, prematchData]) => {
         setInsight(insightData);
         setReport(reportData);
+        setPrematch(prematchData);
         setLoading(false);
       })
       .catch((err) => {
@@ -41,10 +47,12 @@ export default function InsightsScreen() {
   if (error) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>Failed to load insights: {error}</Text>
+        <Text style={styles.errorText}>Failed to load: {error}</Text>
       </View>
     );
   }
+
+  const matchEnded = report?.match_report;
 
   return (
     <ScrollView style={styles.container}>
@@ -52,26 +60,52 @@ export default function InsightsScreen() {
         <Text style={styles.backText}>← Back</Text>
       </TouchableOpacity>
 
+      {/* Match Header */}
       <Text style={styles.matchTitle}>
         {insight?.teams?.join(' vs ')}
       </Text>
       <Text style={styles.statusText}>{insight?.status}</Text>
+      <Text style={styles.venueText}>📍 {prematch?.venue}</Text>
 
-      {/* AI Insight Card */}
+      {/* Toss Info */}
+      {prematch?.toss_winner !== 'Not available yet' && (
+        <View style={styles.tossRow}>
+          <Text style={styles.tossText}>
+            🪙 Toss: {prematch?.toss_winner} chose to {prematch?.toss_choice}
+          </Text>
+        </View>
+      )}
+
+      {/* Pre-match AI Preview */}
+      {prematch?.ai_preview && (
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>🔮 Pre-Match Preview</Text>
+          <Text style={styles.cardContent}>{prematch.ai_preview}</Text>
+        </View>
+      )}
+
+      {/* AI Insight */}
       <View style={styles.card}>
         <Text style={styles.cardLabel}>⚡ AI Insight</Text>
         <Text style={styles.cardContent}>{insight?.ai_insight}</Text>
       </View>
 
-      {/* Match Report */}
-      {report?.match_report && (
+      {/* Match Report (only if match ended) */}
+      {matchEnded ? (
         <View style={styles.card}>
           <Text style={styles.cardLabel}>📋 Match Report</Text>
           <Text style={styles.cardContent}>{report.match_report}</Text>
         </View>
+      ) : (
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>📋 Match Report</Text>
+          <Text style={styles.liveText}>
+            ⏳ Match in progress — full report available after the match ends
+          </Text>
+        </View>
       )}
 
-      {/* Score Breakdown */}
+      {/* Scorecard */}
       <View style={styles.card}>
         <Text style={styles.cardLabel}>🏏 Scorecard</Text>
         {insight?.score_breakdown?.map((s: any, i: number) => (
@@ -119,7 +153,22 @@ const styles = StyleSheet.create({
   statusText: {
     color: '#00E676',
     fontSize: 14,
-    marginBottom: 20,
+    marginBottom: 4,
+  },
+  venueText: {
+    color: '#A0A0A0',
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  tossRow: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 16,
+  },
+  tossText: {
+    color: '#E0E0E0',
+    fontSize: 13,
   },
   card: {
     backgroundColor: '#1E1E1E',
@@ -139,6 +188,11 @@ const styles = StyleSheet.create({
     color: '#E0E0E0',
     fontSize: 14,
     lineHeight: 22,
+  },
+  liveText: {
+    color: '#A0A0A0',
+    fontSize: 14,
+    fontStyle: 'italic',
   },
   scoreRow: {
     flexDirection: 'row',
