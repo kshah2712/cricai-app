@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 
-const API_URL = 'http://172.20.10.3:8000';
+const API_URL = 'https://cricai-backend-production.up.railway.app';
 
 type Match = {
   id: string;

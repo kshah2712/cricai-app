@@ -4,7 +4,7 @@ import {
   FlatList, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform
 } from 'react-native';
 
-const API_URL = 'http://172.20.10.3:8000';
+const API_URL = 'https://cricai-backend-production.up.railway.app';
 
 type Message = {
   id: string;
