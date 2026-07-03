@@ -20,7 +20,14 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Matches',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="cricket.ball.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="sportscourt.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="news"
+        options={{
+          title: 'News',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="newspaper.fill" color={color} />,
         }}
       />
       <Tabs.Screen
