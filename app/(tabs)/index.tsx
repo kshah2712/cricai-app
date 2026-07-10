@@ -27,6 +27,22 @@ type Article = {
   urlToImage: string;
 };
 
+type FeaturedMatch = {
+  match_id: string;
+  name: string;
+  teams: string[];
+  status: string;
+  score: any[];
+  matchStarted: boolean;
+  matchEnded: boolean;
+  venue: string;
+  ai_prediction: {
+    predicted_winner: string;
+    confidence: number;
+    reasoning: string;
+  };
+};
+
 function getMatchState(match: Match) {
   if (match.matchStarted && !match.matchEnded) return 'Live';
   if (!match.matchStarted && !match.matchEnded) return 'Upcoming';
@@ -55,19 +71,12 @@ function timeAgo(dateStr: string) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-const YOUTUBE_CONTENT = [
-  {
-    id: '1',
-    title: 'CricAI Match Analysis',
-    description: 'AI-powered cricket insights',
-    url: 'http://www.youtube.com/@thecricai-27',
-    thumbnail: 'https://img.youtube.com/vi/default/hqdefault.jpg',
-  },
-];
-
 export default function HomeScreen() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [news, setNews] = useState<Article[]>([]);
+  const [featured, setFeatured] = useState<FeaturedMatch | null>(null);
+  const [userPrediction, setUserPrediction] = useState<string | null>(null);
+  const [predictionPoints, setPredictionPoints] = useState(0);
   const [loadingMatches, setLoadingMatches] = useState(true);
   const [loadingNews, setLoadingNews] = useState(true);
   const router = useRouter();
@@ -88,6 +97,13 @@ export default function HomeScreen() {
         setLoadingNews(false);
       })
       .catch(() => setLoadingNews(false));
+
+    fetch(`${API_URL}/predict/featured`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.error) setFeatured(data);
+      })
+      .catch(() => {});
   }, []);
 
   const liveMatches = matches.filter((m) => getMatchState(m) === 'Live');
@@ -119,7 +135,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Section 1: Live & Upcoming Matches (horizontal scroll) */}
+      {/* Section 1: Live & Upcoming Matches */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Matches</Text>
@@ -154,7 +170,6 @@ export default function HomeScreen() {
                     params: { id: item.id }
                   })}
                 >
-                  {/* State tag */}
                   <View style={styles.matchCardHeader}>
                     {state === 'Live' && (
                       <View style={styles.liveTag}>
@@ -174,7 +189,6 @@ export default function HomeScreen() {
                     )}
                   </View>
 
-                  {/* Teams */}
                   {item.teams.map((team, i) => {
                     const scoreForTeam = item.score?.find((s: any) =>
                       s.inning?.toLowerCase().includes(
@@ -195,16 +209,12 @@ export default function HomeScreen() {
                     );
                   })}
 
-                  {/* Status */}
                   <Text style={styles.matchStatus} numberOfLines={2}>
                     {item.status}
                   </Text>
-
-                  {/* Venue */}
                   <Text style={styles.matchVenue} numberOfLines={1}>
                     {item.venue?.split(',')[0]}
                   </Text>
-
                   <Text style={styles.aiHint}>⚡ AI Insights</Text>
                 </TouchableOpacity>
               );
@@ -213,7 +223,118 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Section 2: AI Match Previews */}
+      {/* Section 2: CricAI Predict Banner */}
+      {featured && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>🏆 CricAI Predict</Text>
+            <View style={styles.pointsBadge}>
+              <Text style={styles.pointsText}>{predictionPoints} pts</Text>
+            </View>
+          </View>
+
+          <View style={styles.predictCard}>
+            <Text style={styles.predictMatchName} numberOfLines={1}>
+              {featured.name}
+            </Text>
+
+            <View style={styles.predictTeamsRow}>
+              <TouchableOpacity
+                style={[
+                  styles.predictTeamBtn,
+                  userPrediction === featured.teams[0] && styles.predictTeamBtnSelected,
+                ]}
+                onPress={() => {
+                  if (!userPrediction) {
+                    setUserPrediction(featured.teams[0]);
+                    if (featured.matchEnded &&
+                      featured.teams[0] === featured.ai_prediction.predicted_winner) {
+                      setPredictionPoints(p => p + 50);
+                    }
+                  }
+                }}
+              >
+                <Text style={[
+                  styles.predictTeamText,
+                  userPrediction === featured.teams[0] && styles.predictTeamTextSelected,
+                ]}>
+                  {featured.teams[0]}
+                </Text>
+                {userPrediction === featured.teams[0] && (
+                  <Text style={styles.predictCheck}>✓</Text>
+                )}
+              </TouchableOpacity>
+
+              <Text style={styles.predictVs}>VS</Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.predictTeamBtn,
+                  userPrediction === featured.teams[1] && styles.predictTeamBtnSelected,
+                ]}
+                onPress={() => {
+                  if (!userPrediction) {
+                    setUserPrediction(featured.teams[1]);
+                    if (featured.matchEnded &&
+                      featured.teams[1] === featured.ai_prediction.predicted_winner) {
+                      setPredictionPoints(p => p + 50);
+                    }
+                  }
+                }}
+              >
+                <Text style={[
+                  styles.predictTeamText,
+                  userPrediction === featured.teams[1] && styles.predictTeamTextSelected,
+                ]}>
+                  {featured.teams[1]}
+                </Text>
+                {userPrediction === featured.teams[1] && (
+                  <Text style={styles.predictCheck}>✓</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.aiPredictBox}>
+              <Text style={styles.aiPredictLabel}>⚡ CricAI Predicts</Text>
+              <Text style={styles.aiPredictWinner}>
+                {featured.ai_prediction.predicted_winner} wins
+                <Text style={styles.aiPredictConfidence}>
+                  {' '}({featured.ai_prediction.confidence}% confidence)
+                </Text>
+              </Text>
+              <Text style={styles.aiPredictReason} numberOfLines={2}>
+                {featured.ai_prediction.reasoning}
+              </Text>
+            </View>
+
+            {featured.matchEnded && (
+              <View style={styles.resultRow}>
+                <Text style={styles.resultText}>Result: {featured.status}</Text>
+                {userPrediction && (
+                  <Text style={[
+                    styles.predictionResult,
+                    userPrediction === featured.ai_prediction.predicted_winner
+                      ? styles.predictionCorrect
+                      : styles.predictionWrong
+                  ]}>
+                    {userPrediction === featured.ai_prediction.predicted_winner
+                      ? '✓ Correct! +50 pts'
+                      : '✗ Better luck next time'}
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {!userPrediction && !featured.matchEnded && (
+              <Text style={styles.predictHint}>
+                Tap a team to predict — earn 50 points if correct!
+              </Text>
+            )}
+          </View>
+        </View>
+      )}
+
+      {/* Section 3: AI Match Previews */}
       {upcomingPreviews.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -254,7 +375,7 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Section 3: Latest News */}
+      {/* Section 4: Latest News */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Latest News</Text>
@@ -282,20 +403,20 @@ export default function HomeScreen() {
                   )}
                   <Text style={styles.newsTime}>{timeAgo(article.publishedAt)}</Text>
                 </View>
-                {article.urlToImage && (
+                {article.urlToImage ? (
                   <Image
                     source={{ uri: article.urlToImage }}
                     style={styles.newsImage}
                     resizeMode="cover"
                   />
-                )}
+                ) : null}
               </View>
             </TouchableOpacity>
           ))
         )}
       </View>
 
-      {/* Section 4: CricAI Videos / Press Conference */}
+      {/* Section 5: CricAI Videos */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>CricAI Videos</Text>
@@ -319,7 +440,6 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Press Conference placeholder */}
         <View style={styles.pressConfCard}>
           <Text style={styles.pressConfTitle}>🎙️ Press Conferences</Text>
           <Text style={styles.pressConfDesc}>
@@ -510,6 +630,127 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#242424',
     paddingTop: 8,
+    marginTop: 4,
+  },
+  pointsBadge: {
+    backgroundColor: '#00E676',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  pointsText: {
+    color: '#000000',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  predictCard: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 14,
+    padding: 16,
+    marginHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#00E67640',
+  },
+  predictMatchName: {
+    color: '#888888',
+    fontSize: 12,
+    marginBottom: 14,
+  },
+  predictTeamsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 14,
+  },
+  predictTeamBtn: {
+    flex: 1,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#333333',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  predictTeamBtnSelected: {
+    backgroundColor: '#00E67620',
+    borderColor: '#00E676',
+  },
+  predictTeamText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  predictTeamTextSelected: {
+    color: '#00E676',
+  },
+  predictCheck: {
+    color: '#00E676',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  predictVs: {
+    color: '#444444',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  aiPredictBox: {
+    backgroundColor: '#00E67608',
+    borderRadius: 10,
+    padding: 12,
+    borderLeftWidth: 2,
+    borderLeftColor: '#00E676',
+    marginBottom: 10,
+  },
+  aiPredictLabel: {
+    color: '#00E676',
+    fontSize: 10,
+    fontWeight: '700',
+    marginBottom: 4,
+    letterSpacing: 0.8,
+  },
+  aiPredictWinner: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  aiPredictConfidence: {
+    color: '#00E676',
+    fontSize: 13,
+  },
+  aiPredictReason: {
+    color: '#888888',
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  resultRow: {
+    borderTopWidth: 1,
+    borderTopColor: '#242424',
+    paddingTop: 10,
+    gap: 4,
+  },
+  resultText: {
+    color: '#666666',
+    fontSize: 12,
+  },
+  predictionResult: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  predictionCorrect: {
+    color: '#00E676',
+  },
+  predictionWrong: {
+    color: '#FF4444',
+  },
+  predictHint: {
+    color: '#444444',
+    fontSize: 11,
+    textAlign: 'center',
     marginTop: 4,
   },
   previewCard: {
