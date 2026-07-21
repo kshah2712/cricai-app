@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity,
-  FlatList, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform
+    ActivityIndicator,
+    FlatList,
+    KeyboardAvoidingView, Platform,
+    StyleSheet,
+    Text, TextInput, TouchableOpacity,
+    View
 } from 'react-native';
 
-const API_URL = 'https://cricai-backend-production.up.railway.app';
+const API_URL = 'https://cricai-backend-1nud.onrender.com';
 
 type Message = {
   id: string;

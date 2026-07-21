@@ -1,11 +1,16 @@
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, ActivityIndicator,
-  TouchableOpacity, ScrollView, FlatList, Image, Linking
+    ActivityIndicator,
+    FlatList, Image, Linking,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { useRouter } from 'expo-router';
 
-const API_URL = 'https://cricai-backend-production.up.railway.app';
+const API_URL = 'https://cricai-backend-1nud.onrender.com';
 
 type Match = {
   id: string;

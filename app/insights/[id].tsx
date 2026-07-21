@@ -1,11 +1,14 @@
-import { useEffect, useState, useRef } from 'react';
-import {
-  View, Text, ScrollView, StyleSheet,
-  ActivityIndicator, TouchableOpacity
-} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import {
+    ActivityIndicator,
+    ScrollView, StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
 
-const API_URL = 'https://cricai-backend-production.up.railway.app';
+const API_URL = 'https://cricai-backend-1nud.onrender.com';
 
 export default function MatchDetailScreen() {
   const { id } = useLocalSearchParams();

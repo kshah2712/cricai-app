@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react';
 import {
-  View, Text, FlatList, StyleSheet,
-  ActivityIndicator, TouchableOpacity, Linking, Image
+    ActivityIndicator,
+    FlatList,
+    Image,
+    Linking,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
-const API_URL = 'https://cricai-backend-production.up.railway.app';
+const API_URL = 'https://cricai-backend-1nud.onrender.com';
 
 type Article = {
   title: string;

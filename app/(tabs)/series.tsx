@@ -1,11 +1,16 @@
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  View, Text, FlatList, StyleSheet,
-  ActivityIndicator, TouchableOpacity, ScrollView
+    ActivityIndicator,
+    FlatList,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { useRouter } from 'expo-router';
 
-const API_URL = 'https://cricai-backend-production.up.railway.app';
+const API_URL = 'https://cricai-backend-1nud.onrender.com';
 
 type Series = {
   id: string;

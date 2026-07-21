@@ -1,11 +1,14 @@
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  View, Text, FlatList, StyleSheet,
-  ActivityIndicator, TouchableOpacity
+    ActivityIndicator,
+    FlatList, StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 
-const API_URL = 'https://cricai-backend-production.up.railway.app';
+const API_URL = 'https://cricai-backend-1nud.onrender.com';
 
 type Match = {
   id: string;
